@@ -1,0 +1,21 @@
+TRACKLENS: WINDOWS SETUP
+
+1. Extract this ZIP completely.
+2. Open the folder containing app.py and requirements.txt.
+3. In File Explorer's address bar, type cmd and press Enter.
+4. Run one command at a time, stopping if an error occurs:
+
+py -3.9 -m venv .venv
+.venv\Scripts\activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m unittest discover -s tests -v
+python app.py
+
+5. Open http://127.0.0.1:5004.
+6. Try the synthetic shapes demo, then upload a short video for YOLO.
+7. Keep CMD open. Ctrl+C stops the app.
+
+Use py -0p to list installed Python versions. Substitute -3.11 if installed.
+To test only the shapes demo, install requirements-demo.txt instead.
+Read README.md for exports, model download, limitations, and GitHub commands.

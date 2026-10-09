@@ -1,0 +1,55 @@
+{
+  "automated_tests": {
+    "passed": 12,
+    "failed": 0
+  },
+  "synthetic_demo": {
+    "unique_tracks": {
+      "demo_green": 1,
+      "demo_blue": 1
+    },
+    "crossings": [
+      {
+        "label": "demo_blue",
+        "direction": "right_to_left",
+        "count": 1
+      },
+      {
+        "label": "demo_green",
+        "direction": "left_to_right",
+        "count": 1
+      }
+    ],
+    "decoded_frames": 140,
+    "processed_frames": 70,
+    "peak_visible_tracks": 2,
+    "source_fps": 20.0,
+    "stride": 2,
+    "line_position": 0.5,
+    "processing_seconds": 0.258,
+    "mode": "DemoDetector",
+    "note": "Track IDs can fragment or switch; counts are estimates, not ground-truth unique objects."
+  },
+  "pretrained_inference_smoke": {
+    "unique_tracks": {
+      "bus": 1,
+      "person": 4
+    },
+    "crossings": [],
+    "decoded_frames": 16,
+    "processed_frames": 8,
+    "peak_visible_tracks": 5,
+    "source_fps": 8.0,
+    "stride": 2,
+    "line_position": 0.5,
+    "processing_seconds": 1.317,
+    "mode": "YoloDetector",
+    "note": "Track IDs can fragment or switch; counts are estimates, not ground-truth unique objects."
+  },
+  "real_input": "16-frame repeated-image AVI derived from https://ultralytics.com/images/bus.jpg; execution smoke test, not tracking benchmark",
+  "live_http_job_and_downloads": "passed",
+  "javascript_syntax": "passed node --check",
+  "visual_qa": "Annotated synthetic frame inspected. Full browser rendering unavailable in this environment.",
+  "opencv_version": "4.12.0",
+  "benchmark_limit": "No labeled real-video evaluation; no accuracy, IDF1, or HOTA claim."
+}
