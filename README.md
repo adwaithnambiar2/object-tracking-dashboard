@@ -1,69 +1,96 @@
-# TrackLens — Object Tracking Dashboard
+<div align="center">
 
-**Detect objects. Follow paths. Count movement.**
+# TrackLens
+### My Object Tracking Dashboard
 
-A local computer vision project by **Adwaith Nambiar**, created with substantial ChatGPT assistance. Upload a video to detect selected objects with pretrained YOLO11n, associate detections across frames, display paths, and export annotated footage and CSV logs.
+**From a video clip to object IDs, movement paths, and crossing counts.**
 
-**Python · YOLO11 · OpenCV · SciPy · Flask · HTML/CSS/JavaScript**
+[Explore the demo](#see-it-in-action) · [Run locally](#run-it-on-your-computer) · [How it works](#under-the-hood) · [My learning notes](#what-im-learning)
 
-## What you can do
+</div>
 
-- Upload MP4, AVI, MOV, or MKV clips, up to 100 MB.
-- Select people, bicycles, cars, motorcycles, buses, trucks, cats, or dogs.
-- Adjust detector confidence, frame sampling, and the vertical counting line.
-- View a periodically updated annotated frame with bounding boxes, IDs, and paths.
-- See confirmed track counts and crossings in each direction.
-- Download an annotated AVI, frame-level track CSV, crossing CSV, and JSON summary.
-- Run a synthetic shapes demo without model weights.
+![TrackLens project illustration](docs/tracklens-banner.svg)
 
-The app processes uploaded clips in the background; it is not a webcam stream. The preview refreshes while processing, and the annotated video is downloaded separately. AVI playback may require a local player such as VLC.
+> **By Adwaith Nambiar** · Python, pretrained YOLO11, OpenCV, SciPy, and Flask  
+> A local computer vision prototype created with AI assistance.
 
-## Tracking preview
+## Why I chose this project
 
-![Synthetic demo showing stable IDs, paths, and a counting line](docs/demo-preview.jpg)
+I'm interested in the intersection of machine learning, computer vision, and embedded systems. For this project, I wanted to explore what happens after a model detects an object: how do you follow it through a video, visualize its movement, and turn those observations into useful counts?
 
-*Generated shapes demo: verifies geometric tracking and counting, not learned detection.*
+TrackLens connects pretrained object detection to a tracking pipeline and a browser dashboard. I set up the project on my Windows machine and published the source here. This repository documents the implementation, its tests, and the limitations I still need to work on.
 
-## Quick start — Windows CMD
+## See it in action
 
-Open CMD inside this extracted project folder. Python 3.9 can be used on your current machine; Python 3.11 is a good choice for a fresh environment. Keep this environment separate from your other projects.
+![Synthetic tracking demo with bounding boxes, object IDs, movement paths, and a counting line](docs/demo-preview.jpg)
+
+*Actual output from the built-in synthetic demo. The two colored rectangles are tracked across frames. This demo uses color thresholds; it does not use YOLO.*
+
+### Two ways to explore
+
+| Mode | What you provide | What it demonstrates |
+| --- | --- | --- |
+| **Synthetic shapes demo** | Nothing—click the demo button | Tracking IDs, paths, crossing counts, and exports |
+| **Pretrained YOLO detection** | A short video clip | Object detection connected to tracking and counting |
+
+<details>
+<summary><strong>What am I looking at in the preview?</strong></summary>
+
+- **Bounding boxes** mark the detected objects.
+- **Labels and IDs** show the category and current track identifier.
+- **Trails** connect recent object-center positions.
+- **The vertical line** is the crossing boundary.
+- **The footer** shows the analyzed frame, visible confirmed tracks, and accumulated track IDs.
+
+An ID belongs to a track in this clip. It does not identify a person, and it may change if the tracker loses the object.
+
+</details>
+
+## What the dashboard does
+
+- Upload a video and choose which object classes to detect.
+- Adjust confidence, frame sampling, and counting-line position.
+- Watch the latest annotated frame update during processing.
+- Inspect counts by category and crossing direction.
+- Download annotated footage, track logs, crossing events, and a summary.
+
+| Supported category | Example use |
+| --- | --- |
+| Person | Explore pedestrian movement |
+| Bicycle / motorcycle | Follow two-wheeled traffic |
+| Car / bus / truck | Visualize vehicle paths |
+| Cat / dog | Experiment with animal movement |
+
+The app processes video files in the background. It displays periodically refreshed images rather than streaming a webcam feed.
+
+## Run it on your computer
+
+### Windows CMD
+
+Open a terminal **inside the folder containing `app.py`**. Run each command separately and stop if one fails.
 
 ```bat
+git clone https://github.com/adwaithnambiar2/object-tracking-dashboard.git
+cd object-tracking-dashboard
 py -3.9 -m venv .venv
 .venv\Scripts\activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-python -m unittest discover -s tests -v
 python app.py
 ```
 
-Substitute `py -3.11` if that is your installed version. Installing PyTorch and the detector can take several minutes and use substantial disk space. No NVIDIA GPU is required: the app explicitly runs inference on CPU.
+Open **http://127.0.0.1:5004** and keep the terminal open.
 
-Open **http://127.0.0.1:5004**. Keep CMD open. Stop the server with **Ctrl+C**.
+Python 3.9 is the version used for my Windows setup. You can substitute `py -3.11` if Python 3.11 is installed. Run `py -0p` to see your installed versions.
 
-### Try it first
+**First-install note:** PyTorch and the detector dependencies are large, so installation can take several minutes. The first YOLO job also downloads the model weights. The app explicitly uses CPU inference; a GPU is not required.
 
-1. Click **Try synthetic shapes demo** to check the dashboard and tracking workflow.
-2. Upload a short clip of people or vehicles.
-3. Select the matching object classes and click **Track uploaded video**.
-4. Wait for completion, then download the results.
-
-The first YOLO run downloads `weights/yolo11n.pt`. Internet access is required for that download. Later runs can reuse the weights. Failure to download the model is shown as a job error.
-
-### Lightweight demo setup
-
-To try the dashboard before installing the learned detector, use:
-
-```bat
-python -m pip install -r requirements-demo.txt
-python app.py
-```
-
-Then select the synthetic demo. This mode detects known colored rectangles using HSV thresholds. **It does not use machine learning and does not validate YOLO detection accuracy.** Install the full requirements for uploaded-video detection.
-
-### macOS / Linux
+<details>
+<summary><strong>macOS / Linux setup</strong></summary>
 
 ```bash
+git clone https://github.com/adwaithnambiar2/object-tracking-dashboard.git
+cd object-tracking-dashboard
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
@@ -71,126 +98,227 @@ python -m pip install -r requirements.txt
 python app.py
 ```
 
-## Detection and tracking
+Open http://127.0.0.1:5004. Press Ctrl+C to stop the server.
 
-### Pretrained detection
+</details>
 
-YOLO11n produces object labels, confidence scores, and bounding boxes. The project uses these weights for inference; it does not train or fine-tune the detector. See the [official prediction documentation](https://docs.ultralytics.com/modes/predict/) and [YOLO11 documentation](https://docs.ultralytics.com/models/yolo11/).
+<details>
+<summary><strong>Try the lightweight demo before installing YOLO</strong></summary>
 
-### Custom tracking
+After creating and activating the virtual environment:
 
-`tracker.py` uses a class-gated Hungarian assignment:
+```bat
+python -m pip install -r requirements-demo.txt
+python app.py
+```
 
-1. Predict each existing track's centroid from its previous motion.
-2. Compute matching costs using centroid distance and box intersection-over-union.
-3. Reject class mismatches and candidates beyond the distance gate.
-4. Associate detections one-to-one, or start a new track.
-5. Keep unmatched tracks for up to eight analyzed updates to allow short occlusions.
-6. Confirm a track after three matched observations and retain its last 50 path points.
+Click **Try synthetic shapes demo**. This verifies the dashboard and geometric tracking workflow without downloading model weights.
 
-This is a lightweight geometric tracker, not a re-identification model or ByteTrack implementation. It does not recognize faces or establish someone's identity.
+Install the full `requirements.txt` before using pretrained detection on uploaded clips.
 
-## What the counts mean
+</details>
 
-| Metric | Definition |
+## Your first experiment
+
+1. Start the app and run **Try synthetic shapes demo**.
+2. Check that the result contains two confirmed track IDs and two crossings.
+3. Upload a short clip—start with 5–15 seconds.
+4. Select the classes that appear in the clip.
+5. Process it and download the annotated AVI and CSV logs.
+6. Change the frame stride and compare paths and counts.
+
+### Demo checklist
+
+- [ ] Run the shapes demo.
+- [ ] Try a real video with pretrained detection.
+- [ ] Move the counting line and compare results.
+- [ ] Compare stride 1 with stride 3.
+- [ ] Inspect the crossing CSV.
+- [ ] Find an example where a track ID switches.
+
+*These are suggestions for your own experiment, not claims that every experiment has already been completed.*
+
+## Under the hood
+
+### Detection
+
+The pretrained **YOLO11n** model returns object boxes, labels, and confidence scores. This project uses the model for inference; it does not train or fine-tune its weights.
+
+### Tracking
+
+A custom geometric tracker associates detections with existing tracks using:
+
+- Object-class matching.
+- Centroid distance with a simple motion prediction.
+- Bounding-box intersection-over-union.
+- Hungarian assignment for one-to-one matching.
+
+Tracks are confirmed after three matched observations. Missing tracks remain eligible for matching for up to eight analyzed updates, and the last 50 center positions form the visible trail.
+
+<details>
+<summary><strong>Walk through one video frame</strong></summary>
+
+1. OpenCV reads and resizes the frame.
+2. The detector produces boxes for the selected categories.
+3. The tracker predicts where existing tracks may have moved.
+4. Matching assigns detections to tracks or creates new IDs.
+5. Confirmed tracks update their paths and crossing state.
+6. The app annotates the image and writes observations to CSV.
+7. The dashboard polls the job endpoint for progress and results.
+
+The tracker is a lightweight implementation, not ByteTrack or an appearance-based re-identification system.
+
+</details>
+
+### What the counts actually mean
+
+| Dashboard value | Definition |
 | --- | --- |
-| Confirmed track IDs | IDs with at least three matched observations, grouped by object class |
+| Confirmed track IDs | Tracks with at least three matched observations |
 | Visible tracks | Confirmed tracks detected on the current analyzed frame |
-| Left-to-right crossing | A confirmed track moves from the left side to the right side of the vertical line |
-| Right-to-left crossing | A confirmed track moves in the reverse direction |
+| Left → right | Confirmed tracks that cross from the left side of the line to the right |
+| Right → left | Confirmed tracks that cross in the reverse direction |
 
-Crossing detection uses a small dead zone around the line to reduce jitter. Each track can contribute at most one crossing per direction. Crossings before confirmation may be missed. A track that leaves and returns after expiry gets a new ID and can be counted again. **Track counts are estimates, not guaranteed counts of distinct physical objects.**
+A small dead zone helps suppress crossings caused by jitter around the line. Each track can count once per direction. Crossings before confirmation may be missed.
 
-## Processing and exports
+**A track count is an estimate, not a guaranteed count of distinct physical objects.** An object that disappears and later gets a new ID can be counted again.
 
-The app resizes frames to fit within 960×720 while preserving aspect ratio. It analyzes every Nth frame (default: 2); increasing N reduces work but can lose fast movements and crossings. The output AVI plays analyzed frames at source FPS divided by N to approximately preserve clip duration.
+## Downloads and project files
 
-| Output | Contents |
+| Export | What it contains |
 | --- | --- |
-| `annotated.avi` | Bounding boxes, class labels, track IDs, paths, and counting line |
-| `preview.jpg` | Latest annotated frame |
-| `tracks.csv` | Source frame number, timestamp, ID, class, score, and bounding box |
-| `crossings.csv` | Source frame, ID, class, and crossing direction |
+| `annotated.avi` | Boxes, IDs, movement trails, and the counting line |
+| `tracks.csv` | Frame, timestamp, track ID, category, score, and box coordinates |
+| `crossings.csv` | Frame, ID, category, and crossing direction |
 | `summary.json` | Counts, processing time, frame sampling, and metadata |
+| `preview.jpg` | Latest annotated frame |
 
-Files remain in `runs/<job-id>/`. The app processes one video at a time and limits a session to 20 jobs and a clip to 18,000 decoded frames. Restarting the app clears the in-memory job list but keeps files on disk. Old runs can be deleted when no job is processing. A interrupted job does not resume automatically.
+Results and uploaded clips stay in `runs/<job-id>/`. The source files and weights are excluded from Git. Download the AVI to watch it in a compatible local player; browser AVI playback is not guaranteed.
 
-## Verification
+<details>
+<summary><strong>Explore the source code</strong></summary>
+
+| File | Responsibility |
+| --- | --- |
+| `app.py` | Dashboard routes, uploads, jobs, and downloads |
+| `detectors.py` | YOLO inference and synthetic demo detector |
+| `tracker.py` | Matching, track lifecycle, paths, and counts |
+| `video.py` | Decode, annotate, and export video |
+| `cli.py` | Process a clip from the command line |
+| `templates/index.html` | Dashboard layout and progress polling |
+| `tests/` | Tracking and integration tests |
+| `reports/verification.json` | Recorded verification scope |
+| `.github/workflows/tests.yml` | Automated lightweight tests |
+| `start_windows.bat` | Launch helper after setup |
+
+</details>
+
+## Testing and verification
 
 ```bat
 python -m unittest discover -s tests -v
+```
+
+**12 automated tests passed** during project verification. They cover ID association, class gating, confirmation, expiry, short occlusions, crossing behavior, exports, asynchronous jobs, and invalid inputs.
+
+| Check | Recorded result |
+| --- | --- |
+| Synthetic moving-shapes clip | Two tracks and two directional crossings |
+| Pretrained inference smoke test | People and a bus detected in a repeated-image test clip |
+| HTTP job and download endpoints | Passed |
+| Frontend JavaScript syntax | Passed |
+
+See the [verification report](reports/verification.json) and the repository's [Actions tab](https://github.com/adwaithnambiar2/object-tracking-dashboard/actions).
+
+The real-image check verifies that inference and exports execute. It is **not a tracking-accuracy benchmark on real moving video**. No IDF1, HOTA, or real-video count-accuracy result is claimed.
+
+<details>
+<summary><strong>Run without the browser</strong></summary>
+
+Synthetic demo:
+
+```bat
 python cli.py --demo --output runs/demo
 ```
 
-The 12 automated tests cover matching, confirmation, class gating, short occlusions, expiry, crossing jitter, distance rejection, video exports, asynchronous jobs, and input validation. They run without YOLO weights.
-
-The synthetic clip has two known moving rectangles. Verification confirmed **two track IDs and two directional crossings** over 70 analyzed frames. A separate real-image smoke test used a short repeated-image clip from Ultralytics' public bus example and confirmed that pretrained inference, track creation, and video exports run successfully. This verifies execution, **not detection or tracking accuracy on a labeled real video**.
-
-See `reports/verification.json` for the recorded scope. GitHub Actions is configured to run the lightweight automated tests on pushes and pull requests; this file does not claim the workflow has already run on your GitHub account.
-
-## Command line
+Local video:
 
 ```bat
 python cli.py --source "C:\path\to\clip.mp4" --classes person car --stride 2 --output runs/my-clip
 ```
 
-Results are written to the output folder. Each CLI run replaces result files in that folder; choose a different folder to keep earlier results.
+Choose a new output folder to preserve earlier results. CLI runs replace result files in the selected folder.
 
-## Project files
+</details>
 
-| File | Purpose |
+## What I'm learning
+
+This project gives me a practical way to explore:
+
+- **Detection versus tracking:** finding objects in one frame differs from maintaining their IDs over time.
+- **Sampling tradeoffs:** analyzing fewer frames saves work but can miss movement.
+- **Counting logic:** noisy detections and ID fragmentation affect reported totals.
+- **Integration:** model inference, video handling, background jobs, and a web interface must work together.
+- **Validation:** a passing demo is useful evidence of execution, but real-world reliability requires labeled evaluation.
+
+### My next steps
+
+- [ ] Test more varied real videos.
+- [ ] Measure ID switches and count errors against manual labels.
+- [ ] Compare the custom tracker with an established tracking approach.
+- [ ] Improve behavior during occlusion and camera movement.
+- [ ] Add configurable counting regions.
+
+## AI assistance
+
+I used **ChatGPT for the initial implementation, debugging support, testing guidance, setup troubleshooting, and documentation**. I used the assistance to get the project running locally and publish it on GitHub.
+
+The pretrained detector comes from Ultralytics. I am presenting this as an **AI-assisted learning project**, with the implementation and verification details available for review.
+
+## Limits worth understanding
+
+The tracker can lose IDs in crowded scenes, during prolonged occlusion, or when similar objects cross paths. Confidence scores are not calibrated probabilities. The system processes one clip at a time, accepts uploads up to 100 MB, and limits clips to 18,000 decoded frames.
+
+Frames are resized to fit within 960×720. The annotated AVI uses source FPS divided by stride to approximately preserve clip duration. Restarting the app clears its in-memory job list; interrupted jobs do not resume automatically. Files remain on disk.
+
+This is a local development application, without production hosting, authentication, or a real-video benchmark.
+
+<details>
+<summary><strong>Having trouble?</strong></summary>
+
+| Symptom | Check |
 | --- | --- |
-| `app.py` | Flask dashboard, upload validation, background jobs, and downloads |
-| `detectors.py` | Pretrained YOLO adapter and clearly separated synthetic detector |
-| `tracker.py` | Association, track state, confirmation, and counting |
-| `video.py` | Video decoding, annotation, processing, and export |
-| `cli.py` | Video processing without the browser |
-| `templates/index.html` | Responsive dashboard and progress polling |
-| `tests/` | Tracking and integration tests |
-| `reports/verification.json` | Recorded validation and its limits |
-| `.github/workflows/tests.yml` | Lightweight test automation |
-| `start_windows.bat` | Launch helper after environment setup |
+| Connection refused | Run `python app.py`, leave CMD open, and use port 5004 |
+| Python version missing | Run `py -0p` and select an installed supported version |
+| Import error | Activate `.venv` and install requirements |
+| Model download fails | Check internet access; try the synthetic demo meanwhile |
+| Video will not decode | Try a short standard MP4 or AVI |
+| Processing feels slow | Use a shorter clip or increase stride |
+| IDs switch | Inspect occlusion, detector misses, and fast motion |
+| AVI will not play online | Download and open in a compatible local player |
 
-## Troubleshooting
+</details>
 
-| Problem | Next step |
-| --- | --- |
-| Browser refuses connection | Run `python app.py` and keep CMD open; use port 5004 |
-| Python version unavailable | Run `py -0p` and use an installed supported version |
-| Package missing | Activate `.venv` and install full requirements |
-| Model download fails | Check internet access and retry; the shapes demo works without weights |
-| Video cannot be decoded | Try a short standard MP4 or AVI; codec support depends on OpenCV |
-| Processing takes time | Start with a 5–15 second clip, use fewer classes, or increase frame stride |
-| IDs change or counts look wrong | Occlusion, camera movement, similar objects, and frame skipping can break association |
-| Annotated AVI will not play in browser | Download it and open it with a compatible video player |
+## About me
 
-## Limitations and next steps
+**Adwaith Nambiar**  
+Interested in machine learning, computer vision, embedded systems, and the connection between hardware and software.
 
-Dense crowds, crossing trajectories, camera movement, prolonged occlusion, and detector misses can cause ID switches or duplicate counts. Detector scores are not calibrated probabilities. There is no real-world accuracy benchmark in this project. It is a local development application, without authentication or production deployment.
+[GitHub profile](https://github.com/adwaithnambiar2) · [AI Ticket Router](https://github.com/adwaithnambiar2/ai-ticket-router) · [KNN Music Recommender](https://github.com/adwaithnambiar2/knn-music-recommender)
 
-Next steps include labeled-video evaluation with IDF1/HOTA metrics, comparison against an established tracker, better motion estimation, configurable regions of interest, and validated count accuracy.
+## References and licensing
 
-## Upload to GitHub
+- [Ultralytics YOLO11](https://docs.ultralytics.com/models/yolo11/)
+- [Ultralytics prediction documentation](https://docs.ultralytics.com/modes/predict/)
+- [OpenCV](https://opencv.org/)
+- [SciPy](https://scipy.org/)
 
-Create an empty repository named **object-tracking-dashboard** under **adwaithnambiar2** at https://github.com/new. Leave GitHub's README, license, and gitignore initialization options unchecked.
+Original project source is provided under the [MIT License](LICENSE). Ultralytics software and model weights retain their own [licensing terms](https://www.ultralytics.com/license), and other dependencies retain their respective licenses.
 
-Inside this project folder:
+---
 
-```bat
-git init
-git add .
-git status --short
-git commit -m "Add object tracking dashboard"
-git branch -M main
-git config --local credential.username adwaithnambiar2
-git remote add origin https://adwaithnambiar2@github.com/adwaithnambiar2/object-tracking-dashboard.git
-git push -u origin main
-```
+<div align="center">
 
-Before committing, confirm that `.venv`, model weights, input videos, and `runs` are excluded. The source code, tests, and verification report should be included.
+**Try a clip, inspect the paths, and compare the counts with what you see.**
 
-## Attribution and licensing
-
-Created with substantial ChatGPT assistance for code, documentation, and the synthetic demo. Original project source is provided under the MIT license in `LICENSE`. Ultralytics software and model weights retain their own [licensing terms](https://www.ultralytics.com/license); they are not covered by this project's MIT license and are not bundled here. OpenCV, SciPy, and other dependencies retain their respective licenses.
-
-This project supports an accurate description of **pretrained object-detection inference, geometric tracking, video processing, and local web-app integration** after you run and understand it. It does not establish experience training a detector, using ROS, using Isaac Sim, or performing multi-GPU training.
+</div>
